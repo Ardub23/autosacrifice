@@ -1,5 +1,11 @@
 # AutoSacrifice: Fully AFK Garden
 
+## Loading it
+
+If you're using [CCMM](https://github.com/klattmose/CookieClickerModManager), load `https://cdn.jsdelivr.net/gh/90259025/autosacrifice@main/main.js`. If not, copy and paste the contents of `main.js` into your browser console on the Cookie Clicker site. On Steam, just use the workshop.
+
+## What it does
+
 Automates the entire process of finding mutations and eventually sacrificing the garden. It automatically plants and harvests, switches soil, removes weeds, and eventually sacrifices a full log, making the garden fully AFK. It takes just under 5 days to sacrifice on average when Supreme Intellect is enabled, which amounts to about 2.2 bonus sugar lumps per day.
 
 There are two requirements for using the mod: a fully upgraded (6x6) garden, and a very large amount of cookies relative to your CpS. The first is because coding this for all garden sizes would be a nightmare, and I also think it's best from a player experience standpoint to sacrifice manually at least once. The large bank requirement is just due to many plants being pretty expensive (the 32 queenbeet setup to unlock the JQB is particularly pricy). Therefore, the ideal time to use this mod is after you've done an endgame combo and only have sugar lump related achievements left. The mod does not disable steam achievements because of these requirements.
