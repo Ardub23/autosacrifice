@@ -3,45 +3,50 @@
     Game.registerMod("autosacrifice",
     {
         auto_sac_enabled: false,
+        do_convert: false,
+        avoid_cps_buffs: false,
         
         hook_added: false,
         
         auto_sac_button: null,
+        do_convert_button: null,
+        avoid_cps_buffs_button: null,
         
-    	init: function()
+        init: function()
         {
-            Game.Notify('Auto Sacrifice Loaded!',`Enable it with the button at the top of the options menu.`, [16, 5], 5);
+            Game.Notify('Auto Sacrifice Loaded!',`Enable it with the button at the bottom of the options menu.`, [16, 5], 5);
             
             let MOD = this;
             
-    		let menu = Game.UpdateMenu;
+            let menu = Game.UpdateMenu;
             
-    		Game.UpdateMenu = function(){
-    			menu();
+            Game.UpdateMenu = function(){
+                menu();
                 
-    			if(Game.onMenu == 'prefs'){
-    				// create button
-    				MOD.auto_sac_button = document.createElement("div");
-    				MOD.auto_sac_button.classList.add("listing");
+                if (Game.onMenu == 'prefs')
+                {
+                    document.querySelector("#screenreaderButton").nextElementSibling.nextElementSibling.insertAdjacentHTML("afterend", `
+                        <a class="smallFancyButton prefButton option ${MOD.auto_sac_enabled ? "on" : "off"}" id="auto-sac-button" onclick="Game.toggle_auto_sac()">AutoSacrifice ${MOD.auto_sac_enabled ? "ON" : "OFF"}</a>
+                        <label>(makes the garden fully automatic, from planting to harvesting to sacrificing)</label>
+                        <br>
+                        
+                        <a class="smallFancyButton prefButton option ${MOD.do_convert ? "on" : "off"}" id="do-convert-button" onclick="Game.toggle_do_convert()">Auto convert ${MOD.do_convert ? "ON" : "OFF"}</a>
+                        <label>(automatically convert the garden; turn off if you want the seeds but not the lumps)</label>
+                        <br>
+                        
+                        <a class="smallFancyButton prefButton option ${MOD.avoid_cps_buffs ? "on" : "off"}" id="avoid-cps-buffs-button" onclick="Game.toggle_avoid_cps_buffs()">Avoid CpS buffs ${MOD.avoid_cps_buffs ? "ON" : "OFF"}</a>
+                        <label>(skip planting seeds if a buff is currently active)</label>
+                        <br>
+                    `);
                     
-    				if (MOD.auto_sac_enabled)
+                    setTimeout(() =>
                     {
-                        MOD.auto_sac_button.innerHTML = "<a class='option smallFancyButton' onclick='Game.toggle_auto_sac()'>Disable Auto Sacrifice</a>";
-                    }
-                    
-                    else
-                    {
-                        MOD.auto_sac_button.innerHTML = "<a class='option smallFancyButton' onclick='Game.toggle_auto_sac()'>Enable Auto Sacrifice</a>";
-                    }
-                    
-                    
-
-    				// add button to menu
-    				let topBtns = document.querySelector("#menu").querySelector(".subsection").querySelectorAll(".listing");
-    				let saveBtn = topBtns[2];
-    				saveBtn.after(MOD.auto_sac_button);
-    			}
-    		};
+                        MOD.auto_sac_button = l("auto-sac-button");
+                        MOD.do_convert_button = l("do-convert-button");
+                        MOD.avoid_cps_buffs_button = l("avoid-cps-buffs-button");
+                    }, 50);
+                }
+            };
             
             Game.toggle_auto_sac = function()
             {
@@ -49,43 +54,137 @@
                 
                 if (!MOD.auto_sac_enabled)
                 {
-                    MOD.auto_sac_button.innerHTML = "<a class='option smallFancyButton' onclick='Game.toggle_auto_sac()'>Enable Auto Sacrifice</a>";
+                    try
+                    {
+                        MOD.auto_sac_button.textContent = "AutoSacrifice OFF";
+                        MOD.auto_sac_button.classList.remove("on");
+                        MOD.auto_sac_button.classList.add("off");
+                    }
+                    
+                    catch(ex) {}
+                    
+                    if (MOD.do_convert)
+                    {
+                        Game.toggle_do_convert();
+                    }
+                    
+                    if (MOD.avoid_cps_buffs)
+                    {
+                        Game.toggle_avoid_cps_buffs();
+                    }
                 }
                 
                 else
                 {
-                    MOD.auto_sac_button.innerHTML = "<a class='option smallFancyButton' onclick='Game.toggle_auto_sac()'>Disable Auto Sacrifice</a>";
+                    try
+                    {
+                        MOD.auto_sac_button.textContent = "AutoSacrifice ON";
+                        MOD.auto_sac_button.classList.remove("off");
+                        MOD.auto_sac_button.classList.add("on");
+                    }
+                    
+                    catch(ex) {}
+                    
+                    if (!MOD.do_convert)
+                    {
+                        Game.toggle_do_convert();
+                    }
                 }
                 
                 MOD.add_hook();
             };
-    	},
-        
-        
-        
-    	save: function()
-        {
-            return `${this.fertilizer_ticks}|${this.woodchips_ticks}`;
-    	},
-        
-        
-        
-    	load: function(str)
-        {
-            let index = str.indexOf("|");
             
-            if (index !== -1)
+            Game.toggle_do_convert = function()
             {
-                this.fertilizer_ticks = str.slice(0, index);
-                this.woodchips_ticks = str.slice(index + 1);
-            }
+                MOD.do_convert = !MOD.do_convert;
+                
+                try
+                {
+                    if (!MOD.do_convert)
+                    {
+                        MOD.do_convert_button.textContent = "Auto convert OFF";
+                        MOD.do_convert_button.classList.remove("on");
+                        MOD.do_convert_button.classList.add("off");
+                    }
+                    
+                    else
+                    {
+                        MOD.do_convert_button.textContent = "Auto convert ON";
+                        MOD.do_convert_button.classList.remove("off");
+                        MOD.do_convert_button.classList.add("on");
+                    }
+                }
+                
+                catch(ex) {}
+            };
             
-            else
+            Game.toggle_avoid_cps_buffs = function()
+            {
+                MOD.avoid_cps_buffs = !MOD.avoid_cps_buffs;
+                
+                try
+                {
+                    if (!MOD.avoid_cps_buffs)
+                    {
+                        MOD.avoid_cps_buffs_button.textContent = "Avoid CpS buffs OFF";
+                        MOD.avoid_cps_buffs_button.classList.remove("on");
+                        MOD.avoid_cps_buffs_button.classList.add("off");
+                    }
+                    
+                    else
+                    {
+                        MOD.avoid_cps_buffs_button.textContent = "Avoid CpS buffs ON";
+                        MOD.avoid_cps_buffs_button.classList.remove("off");
+                        MOD.avoid_cps_buffs_button.classList.add("on");
+                    }
+                }
+                
+                catch(ex) {}
+            };
+        },
+        
+        
+        
+        save: function()
+        {
+            return `${this.fertilizer_ticks}|${this.woodchips_ticks}|${this.auto_sac_enabled ? 1 : 0}|${this.do_convert ? 1 : 0}|${this.avoid_cps_buffs ? 1 : 0}`;
+        },
+        
+        
+        
+        load: function(str)
+        {
+            if (str.indexOf("|") === -1)
             {
                 this.fertilizer_ticks = 0;
                 this.woodchips_ticks = 0;
+                
+                return;
             }
-    	},
+            
+            let components = str.split("|");
+            
+            this.fertilizer_ticks = parseInt(components[0]);
+            this.woodchips_ticks = parseInt(components[1]);
+            
+            setTimeout(() =>
+            {
+                if (!!parseInt(components[2]) !== this.auto_sac_enabled)
+                {
+                    Game.toggle_auto_sac();
+                }
+                
+                if (!!parseInt(components[3]) !== this.do_convert)
+                {
+                    Game.toggle_do_convert();
+                }
+                
+                if (!!parseInt(components[4]) !== this.avoid_cps_buffs)
+                {
+                    Game.toggle_avoid_cps_buffs();
+                }
+            }, 500);
+        },
         
         
         
@@ -576,6 +675,11 @@
                     }
                 }
                 
+                if (!this.do_convert)
+                {
+                    return;
+                }
+                
                 Game.ObjectsById[2].minigame.convert();
                 
                 this.seed_to_unlock = "meddleweed";
@@ -711,7 +815,7 @@
                 {
                     if (Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][0] === 0)
                     {
-                        Game.ObjectsById[2].minigame.useTool(id, tiles[i][1], tiles[i][0]);
+                        this.plant_seed(id, tiles[i][1], tiles[i][0]);
                     }
                 }
             }
@@ -725,7 +829,7 @@
                 {
                     if (Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][0] === 0)
                     {
-                        Game.ObjectsById[2].minigame.useTool(id, tiles[i][1], tiles[i][0]);
+                        this.plant_seed(id, tiles[i][1], tiles[i][0]);
                     }
                 }
             }
@@ -832,7 +936,7 @@
                 {
                     if (Game.ObjectsById[2].minigame.plot[slow_tiles[i][0]][slow_tiles[i][1]][0] === 0)
                     {
-                        Game.ObjectsById[2].minigame.useTool(slow_id, slow_tiles[i][1], slow_tiles[i][0]);
+                        this.plant_seed(slow_id, slow_tiles[i][1], slow_tiles[i][0]);
                     }
                 }
                 
@@ -846,7 +950,7 @@
                 {
                     if (Game.ObjectsById[2].minigame.plot[slow_tiles[i][0]][slow_tiles[i][1]][0] === 0)
                     {
-                        Game.ObjectsById[2].minigame.useTool(slow_id, slow_tiles[i][1], slow_tiles[i][0]);
+                        this.plant_seed(slow_id, slow_tiles[i][1], slow_tiles[i][0]);
                     }
                 }
             }
@@ -900,7 +1004,7 @@
                 {
                     if (Game.ObjectsById[2].minigame.plot[fast_tiles[i][0]][fast_tiles[i][1]][0] === 0)
                     {
-                        Game.ObjectsById[2].minigame.useTool(fast_id, fast_tiles[i][1], fast_tiles[i][0]);
+                        this.plant_seed(fast_id, fast_tiles[i][1], fast_tiles[i][0]);
                     }
                 }
             }
@@ -994,7 +1098,7 @@
                     if (tile[0] === 0)
                     {
                         //Plant meddleweed.
-                        Game.ObjectsById[2].minigame.useTool(this.mutation_setups.meddleweed.id, j, i);
+                        this.plant_seed(this.mutation_setups.meddleweed.id, j, i);
                         
                         continue;
                     }
@@ -1038,6 +1142,26 @@
                 
                 catch(ex) {}
             }
+        },
+        
+        
+        
+        plant_seed: function(id, x, y)
+        {
+            if (this.avoid_cps_buffs)
+            {
+                for (let key in Game.buffs)
+                {
+                    if (typeof Game.buffs[key].multCpS !== "undefined" && Game.buffs[key].multCpS > 1)
+                    {
+                        Game.Notify('Auto Sacrifice', `Skipping planting due to active buff`, [16, 5], 5);
+                        
+                        return;
+                    }
+                }
+            }
+            
+            Game.ObjectsById[2].minigame.useTool(id, x, y);
         }
     });
-}(); 
+}();
