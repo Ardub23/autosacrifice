@@ -5,12 +5,14 @@
         auto_sac_enabled: false,
         do_convert: false,
         avoid_cps_buffs: false,
+        do_soil_rotation: false,
         
         hook_added: false,
         
         auto_sac_button: null,
         do_convert_button: null,
         avoid_cps_buffs_button: null,
+        do_soil_rotation_button: null,
         
         init: function()
         {
@@ -27,7 +29,7 @@
                 {
                     document.querySelector("#screenreaderButton").nextElementSibling.nextElementSibling.insertAdjacentHTML("afterend", `
                         <a class="smallFancyButton prefButton option ${MOD.auto_sac_enabled ? "on" : "off"}" id="auto-sac-button" onclick="Game.toggle_auto_sac()">AutoSacrifice ${MOD.auto_sac_enabled ? "ON" : "OFF"}</a>
-                        <label>(makes the garden fully automatic, from planting to harvesting to sacrificing)</label>
+                        <label>(make the garden fully automatic, from planting to harvesting to sacrificing)</label>
                         <br>
                         
                         <a class="smallFancyButton prefButton option ${MOD.do_convert ? "on" : "off"}" id="do-convert-button" onclick="Game.toggle_do_convert()">Auto convert ${MOD.do_convert ? "ON" : "OFF"}</a>
@@ -37,6 +39,10 @@
                         <a class="smallFancyButton prefButton option ${MOD.avoid_cps_buffs ? "on" : "off"}" id="avoid-cps-buffs-button" onclick="Game.toggle_avoid_cps_buffs()">Avoid CpS buffs ${MOD.avoid_cps_buffs ? "ON" : "OFF"}</a>
                         <label>(skip planting seeds if a buff is currently active)</label>
                         <br>
+                        
+                        <a class="smallFancyButton prefButton option ${MOD.do_soil_rotation ? "on" : "off"}" id="do-soil-rotation-button" onclick="Game.toggle_do_soil_rotation()">Auto rotate soil ${MOD.do_soil_rotation ? "ON" : "OFF"}</a>
+                        <label>(automatically switch between fertilizer and wood chips)</label>
+                        <br>
                     `);
                     
                     setTimeout(() =>
@@ -44,6 +50,7 @@
                         MOD.auto_sac_button = l("auto-sac-button");
                         MOD.do_convert_button = l("do-convert-button");
                         MOD.avoid_cps_buffs_button = l("avoid-cps-buffs-button");
+                        MOD.do_soil_rotation_button = l("do-soil-rotation-button");
                     }, 50);
                 }
             };
@@ -72,6 +79,11 @@
                     {
                         Game.toggle_avoid_cps_buffs();
                     }
+                    
+                    if (MOD.do_soil_rotation)
+                    {
+                        Game.toggle_do_soil_rotation();
+                    }
                 }
                 
                 else
@@ -88,6 +100,11 @@
                     if (!MOD.do_convert)
                     {
                         Game.toggle_do_convert();
+                    }
+                    
+                    if (!MOD.do_soil_rotation)
+                    {
+                        Game.toggle_do_soil_rotation();
                     }
                 }
                 
@@ -141,13 +158,37 @@
                 
                 catch(ex) {}
             };
+            
+            Game.toggle_do_soil_rotation = function()
+            {
+                MOD.do_soil_rotation = !MOD.do_soil_rotation;
+                
+                try
+                {
+                    if (!MOD.do_soil_rotation)
+                    {
+                        MOD.do_soil_rotation_button.textContent = "Auto rotate soil OFF";
+                        MOD.do_soil_rotation_button.classList.remove("on");
+                        MOD.do_soil_rotation_button.classList.add("off");
+                    }
+                    
+                    else
+                    {
+                        MOD.do_soil_rotation_button.textContent = "Auto rotate soil ON";
+                        MOD.do_soil_rotation_button.classList.remove("off");
+                        MOD.do_soil_rotation_button.classList.add("on");
+                    }
+                }
+                
+                catch(ex) {}
+            };
         },
         
         
         
         save: function()
         {
-            return `${this.fertilizer_ticks}|${this.woodchips_ticks}|${this.auto_sac_enabled ? 1 : 0}|${this.do_convert ? 1 : 0}|${this.avoid_cps_buffs ? 1 : 0}`;
+            return `${this.fertilizer_ticks}|${this.woodchips_ticks}|${this.auto_sac_enabled ? 1 : 0}|${this.do_convert ? 1 : 0}|${this.avoid_cps_buffs ? 1 : 0}|${this.do_soil_rotation ? 1 : 0}`;
         },
         
         
@@ -183,6 +224,11 @@
                 {
                     Game.toggle_avoid_cps_buffs();
                 }
+                
+                if (!!parseInt(components[5]) !== this.do_soil_rotation)
+                {
+                    Game.toggle_do_soil_rotation();
+                }
             }, 500);
         },
         
@@ -214,7 +260,51 @@
         
         
         
-        seed_order: ["meddleweed", "thumbcorn", "crumbspore", "brownMold", "cronerice", "whiteMildew", "wrinklegill", "glovemorel", "chocoroot", "whiteChocoroot", "tidygrass", "bakeberry", "queenbeet", "queenbeetLump", "duketater", "gildmillet", "wardlichen", "clover", "greenRot", "keenmoss", "shimmerlily", "elderwort", "drowsyfern", "shriekbulb", "everdaisy", "ichorpuff", "doughshroom", "cheapcap", "foolBolete", "goldenClover", "whiskerbloom", "chimerose", "nursetulip"],
+        seed_order:
+        [
+            "meddleweed",
+            "thumbcorn",
+            "bakeberry",
+            "cronerice",
+            
+            "crumbspore",
+            "brownMold",
+            "whiteMildew",
+            "chocoroot",
+            "queenbeet",
+            "queenbeetLump",
+            "duketater",
+            "shriekbulb",
+            
+            "whiteChocoroot",
+            "tidygrass",
+            
+            "gildmillet",
+            "clover",
+            "greenRot",
+            "shimmerlily",
+            
+            "doughshroom",
+            "wrinklegill",
+            "glovemorel",
+            "cheapcap",
+            "foolBolete",
+            
+            "keenmoss",
+            "drowsyfern",
+            
+            "elderwort",
+            "wardlichen",
+            
+            "ichorpuff",
+            "everdaisy",
+            
+            "whiskerbloom",
+            "chimerose",
+            "nursetulip",
+            
+            "goldenClover"
+        ],
         
         seed_to_unlock: "",
         
@@ -291,14 +381,8 @@
             {
                 id: 30,
                 type: 0,
-                parents: ["elderwort"],
-                
-                tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5]],
-            
-                empty_tiles: [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]]
+                parents: ["duketater"],
             },
-            
-            
             
             
             
@@ -362,7 +446,7 @@
             {
                 id: 18,
                 type: 1,
-                parents: ["whiteMildew", "cronerice"]
+                parents: ["keenmoss", "cronerice"]
             },
             
             shimmerlily:
@@ -441,11 +525,11 @@
                 type: 1,
                 parents: ["crumbspore", "elderwort"],
                 
-                fast_tiles: [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5]],
+                fast_tiles: [[1, 1], [1, 4], [5, 1], [5, 4]],
                 
-                slow_tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5]],
+                slow_tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5]],
             
-                empty_tiles: [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]]
+                empty_tiles: [[1, 0], [1, 2], [1, 3], [1, 5], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5], [5, 0], [5, 2], [5, 3], [5, 5]]
             },
             
             everdaisy:
@@ -454,11 +538,11 @@
                 type: 1,
                 parents: ["tidygrass", "elderwort"],
                 
-                fast_tiles: [[2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5]],
+                fast_tiles: [[1, 0], [1, 2], [1, 3], [1, 5], [2, 0], [2, 2], [2, 5], [4, 0], [4, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]],
                 
-                slow_tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [4, 5]],
+                slow_tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5]],
             
-                empty_tiles: [[1, 0], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]]
+                empty_tiles: [[1, 1], [1, 4], [2, 1], [2, 3], [2, 4], [4, 1], [4, 2], [4, 3], [4, 4]]
             },
             
             
@@ -493,11 +577,26 @@
         
         
         fertilizer_ticks: 0,
-        
         woodchips_ticks: 0,
+        
+        last_fertilizer_ticks: 0,
+        last_woodchips_ticks: 0,
+        
+        num_iterations: -1,
+        
+        do_add_elderwort: false,
         
         post_tick_logic: function()
         {
+            //Debug for testing
+            /*
+            Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .00005;
+            Game.ObjectsById[2].minigame.soils["woodchips"].tick = .00005;
+            Game.ObjectsById[2].minigame.nextSoil = 0;
+            */
+            
+            
+            
             if (Game.ObjectsById[2].minigame.soil === 1)
             {
                 this.fertilizer_ticks++;
@@ -527,37 +626,18 @@
             
             
             
+            this.add_elderwort();
+            
             this.select_next_target();
             
             this.remove_unlocked_plants();
+            
+            this.remove_non_unlocked_duplicates();
             
             //Sometimes we may be in a state where we don't have the ability to grow anything cause we're waiting on a ton of stuff to grow.
             if (this.seed_to_unlock === "")
             {
                 return;
-            }
-            
-            
-            
-            //Need a hardcoded special case here unfortunately.
-            if (this.seed_to_unlock === "everdaisy")
-            {
-                for (let j = 0; j < 6; j++)
-                {
-                    let tile = Game.ObjectsById[2].minigame.plot[2][j];
-                    
-                    if (tile[0] === 0)
-                    {
-                        continue;
-                    }
-                    
-                    let plant = Game.ObjectsById[2].minigame.plantsById[tile[0] - 1];
-                    
-                    if (plant.key === "elderwort")
-                    {
-                        Game.ObjectsById[2].minigame.harvest(j, 2, true);
-                    }
-                }
             }
             
             
@@ -592,6 +672,54 @@
                 this.unlock_crumbspore_brownMold_logic();
                 
                 return;
+            }
+        },
+        
+        
+        
+        //When there's just a JQB or Everdaisy left growing, surround it with Elderwort.
+        add_elderwort: function()
+        {
+            this.do_add_elderwort = true;
+            
+            for (let i = 0; i < this.seed_order.length; i++)
+            {
+                let plant = Game.ObjectsById[2].minigame.plants[this.seed_order[i]];
+                
+                if (!(plant.key === "queenbeetLump" || plant.key === "everdaisy" || plant.unlocked))
+                {
+                    this.do_add_elderwort = false;
+                    
+                    break;
+                }
+            }
+            
+            
+            
+            if (this.do_add_elderwort)
+            {
+                for (let i = 0; i < 6; i++)
+                {
+                    for (let j = 0; j < 6; j++)
+                    {
+                        let id = Game.ObjectsById[2].minigame.plot[i][j][0] - 1;
+                        
+                        if (id === this.mutation_setups["queenbeetLump"].id || id === this.mutation_setups["everdaisy"].id )
+                        {
+                            //These two never occur in the outer edge of the garden, so we can skip inbounds checks.
+                            for (let k = -1; k <= 1; k++)
+                            {
+                                for (let l = -1; l <= 1; l++)
+                                {
+                                    if (Game.ObjectsById[2].minigame.plot[i + k][j + l][0] === 0)
+                                    {
+                                        this.plant_seed(this.mutation_setups["elderwort"].id, j + l, i + k);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         
@@ -684,12 +812,23 @@
                 
                 this.seed_to_unlock = "meddleweed";
                 
-                Game.Notify('Auto Sacrifice', `Sacrificed in ${this.fertilizer_ticks} fertilizer ticks and ${this.woodchips_ticks} woodchips ticks`, [16, 5], 5);
                 
-                console.log(`Sacrificed in ${this.fertilizer_ticks} fertilizer ticks and ${this.woodchips_ticks} woodchips ticks`);
                 
-                this.fertilizer_ticks = 0;
-                this.woodchips_ticks = 0;
+                this.num_iterations++;
+                
+                if (this.num_iterations === 0)
+                {
+                    this.fertilizer_ticks = 0;
+                    this.woodchips_ticks = 0;
+                }
+                
+                else
+                {
+                    console.log(`Sacrificed in ${this.fertilizer_ticks - this.last_fertilizer_ticks} fertilizer ticks and ${this.woodchips_ticks - this.last_woodchips_ticks} woodchips ticks. Current average: ${Math.round(this.fertilizer_ticks / this.num_iterations)}, ${Math.round(this.woodchips_ticks / this.num_iterations)}`);
+                    
+                    this.last_fertilizer_ticks = this.fertilizer_ticks;
+                    this.last_woodchips_ticks = this.woodchips_ticks;
+                }
                 
                 Game.Notify('Auto Sacrifice', `Targeting Meddleweed`, [16, 5], 5);
             }
@@ -766,7 +905,75 @@
                     
                     if (Game.ObjectsById[2].minigame.plants[plant.key].unlocked && (ignore_parents || this.seed_to_unlock === "" || this.mutation_setups[this.seed_to_unlock].parents.indexOf(plant.key) === -1))
                     {
+                        if (this.do_add_elderwort && plant.key === "elderwort")
+                        {
+                            continue;
+                        }
+                        
                         Game.ObjectsById[2].minigame.harvest(j, i, true);
+                    }
+                }
+            }
+        },
+        
+        
+        
+        remove_non_unlocked_duplicates: function()
+        {
+            let non_unlocked_plants = {};
+            
+            for (let i = 0; i < 6; i++)
+            {
+                for (let j = 0; j < 6; j++)
+                {
+                    let tile = Game.ObjectsById[2].minigame.plot[i][j];
+                    
+                    if (tile[0] === 0)
+                    {
+                        continue;
+                    }
+                    
+                    let plant = Game.ObjectsById[2].minigame.plantsById[tile[0] - 1];
+                    
+                    if (!Game.ObjectsById[2].minigame.plants[plant.key].unlocked)
+                    {
+                        if (typeof non_unlocked_plants[plant.key] === "undefined")
+                        {
+                            non_unlocked_plants[plant.key] = [];
+                        }
+                        
+                        non_unlocked_plants[plant.key].push([i, j]);
+                    }
+                }
+            }
+            
+            for (let key in non_unlocked_plants)
+            {
+                if (non_unlocked_plants[key].length > 1)
+                {
+                    let max_age = 0;
+                    
+                    for (let i = 0; i < non_unlocked_plants[key].length; i++)
+                    {
+                        let row = non_unlocked_plants[key][i][0];
+                        let col = non_unlocked_plants[key][i][1];
+                        
+                        let tile = Game.ObjectsById[2].minigame.plot[row][col];
+                        
+                        max_age = Math.max(max_age, tile[1]);
+                    }
+                    
+                    for (let i = 0; i < non_unlocked_plants[key].length; i++)
+                    {
+                        let row = non_unlocked_plants[key][i][0];
+                        let col = non_unlocked_plants[key][i][1];
+                        
+                        let tile = Game.ObjectsById[2].minigame.plot[row][col];
+                        
+                        if (tile[1] < max_age)
+                        {
+                            Game.ObjectsById[2].minigame.harvest(col, row, true);
+                        }
                     }
                 }
             }
@@ -1117,6 +1324,17 @@
         
         change_soil: function(id)
         {
+            if (!this.do_soil_rotation)
+            {
+                return;
+            }
+            
+            //Shriekbulbs mutate from Duketaters at any age.
+            if (this.seed_to_unlock === "shriekbulb" && Game.ObjectsById[2].minigame.soil === 1)
+            {
+                return;
+            }
+            
             if (Game.ObjectsById[2].minigame.soil !== id && Game.ObjectsById[2].minigame.nextSoil <= Date.now())
             {
                 Game.ObjectsById[2].minigame.soil = id;
