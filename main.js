@@ -263,11 +263,12 @@
 		
 		seed_order:
 		[
+			"meddleweed",
+			
 			"bakeberry",
 			"thumbcorn",
 			"cronerice",
 			
-			"meddleweed",
 			"crumbspore",
 			"brownMold",
 			"whiteMildew",
@@ -605,11 +606,11 @@
 		post_tick_logic: function()
 		{
 			//Debug for testing
-			
+			/*
 			Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .00005;
 			Game.ObjectsById[2].minigame.soils["woodchips"].tick = .00005;
 			Game.ObjectsById[2].minigame.nextSoil = 0;
-			
+			*/
 			
 			
 			
@@ -1017,7 +1018,7 @@
 					this.last_woodchips_ticks = this.woodchips_ticks;
 				}
 				
-				Game.Notify('Auto Sacrifice', `Targeting Bakeberry`, [15, 6], Infinity);
+				Game.Notify('Auto Sacrifice', `Targeting ${Game.ObjectsById[2].minigame.plants[this.seed_order[0]].name}`, [15, 6], Infinity);
 			}
 		},
 		
