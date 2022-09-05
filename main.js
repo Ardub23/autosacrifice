@@ -285,20 +285,20 @@
 			"greenRot",
 			"shimmerlily",
 			
-			"doughshroom",
-			"wrinklegill",
-			"glovemorel",
-			"cheapcap",
-			"foolBolete",
-			
 			"keenmoss",
 			"drowsyfern",
 			
 			"elderwort",
 			"wardlichen",
 			
-			"ichorpuff",
 			"everdaisy",
+			"ichorpuff",
+			
+			"doughshroom",
+			"wrinklegill",
+			"glovemorel",
+			"cheapcap",
+			"foolBolete",
 			
 			"whiskerbloom",
 			"chimerose",
@@ -667,15 +667,11 @@
 			if (setup.type === 0)
 			{
 				this.unlock_type_0_logic(...(setup.parents));
-				
-				return;
 			}
 			
-			if (setup.type === 1)
+			else if (setup.type === 1)
 			{
 				this.unlock_type_1_logic(...(setup.parents));
-				
-				return;
 			}
 			
 			
@@ -683,28 +679,55 @@
 			if (this.seed_to_unlock === "meddleweed")
 			{
 				this.unlock_meddleweed_logic();
-				
-				return;
 			}
 			
-			if (this.seed_to_unlock === "crumbspore" || this.seed_to_unlock === "brownMold")
+			else if (this.seed_to_unlock === "crumbspore" || this.seed_to_unlock === "brownMold")
 			{
 				this.unlock_crumbspore_brownMold_logic();
 				
 				this.remove_non_unlocked_duplicates();
-				
-				return;
+			}
+			
+			else if (this.seed_to_unlock === "shriekbulb")
+			{
+				this.change_soil(4);
 			}
 		},
 		
 		
 		
+		need_woodchips_for_secondary_target: false,
+		
 		//Deals with plants where we attempt to parlay them directly into new mutations.
 		handle_secondary_targets: function()
 		{
+			this.need_woodchips_for_secondary_target = false;
+			
 			for (let key in this.secondary_targets)
 			{
-				if (Game.ObjectsById[2].minigame.plants[key].unlocked || Game.ObjectsById[2].minigame.plot[this.secondary_targets[key].source_tile[0]][this.secondary_targets[key].source_tile[1]][0] - 1 !== this.mutation_setups[this.secondary_targets[key].source_key].id)
+				let source_tile = this.secondary_targets[key].source_tile;
+				let source_key = this.secondary_targets[key].source_key;
+				
+				
+				
+				let mutation_tiles = this.secondary_targets[key].mutation_tiles;
+				
+				let mutation_happened = false;
+				
+				for (let i = 0; i < mutation_tiles.length; i++)
+				{
+					let id = Game.ObjectsById[2].minigame.plot[mutation_tiles[i][0]][mutation_tiles[i][1]][0] - 1;
+					
+					if (id === this.mutation_setups[key].id)
+					{
+						mutation_happened = true;
+						break;
+					}
+				}
+				
+				
+				
+				if (mutation_happened || Game.ObjectsById[2].minigame.plants[key].unlocked || Game.ObjectsById[2].minigame.plot[source_tile[0]][source_tile[1]][0] - 1 !== this.mutation_setups[source_key].id)
 				{
 					delete this.secondary_targets[key];
 					continue;
@@ -733,6 +756,33 @@
 						}
 					}
 				}
+				
+				if (Game.ObjectsById[2].minigame.plot[source_tile[0]][source_tile[1]][1] >= Game.ObjectsById[2].minigame.plants[source_key].mature)
+				{
+					let mature = 0;
+					
+					let tiles = this.secondary_targets[key].tiles;
+					let key_to_plant = this.secondary_targets[key].key_to_plant;
+					
+					if (key_to_plant === "")
+					{
+						continue;
+					}
+					
+					for (let i = 0; i < tiles.length; i++)
+					{
+						if (Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][1] === Game.ObjectsById[2].minigame.plants[key_to_plant].mature)
+						{
+							mature++;
+						}
+					}
+					
+					if (mature > tiles.length / 2)
+					{
+						this.need_woodchips_for_secondary_target = true;
+						this.change_soil(4);
+					}	
+				}
 			}
 		},
 		
@@ -751,7 +801,75 @@
 				{
 					this.do_add_elderwort = false;
 					
-					break;
+					return;
+				}
+			}
+			
+			
+			
+			if (!Game.ObjectsById[2].minigame.plants["queenbeetLump"].unlocked)
+			{
+				let found_plant = false;
+				
+				for (let i = 0; i < 6; i++)
+				{
+					for (let j = 0; j < 6; j++)
+					{
+						let id = Game.ObjectsById[2].minigame.plot[i][j][0] - 1;
+						
+						if (id === this.mutation_setups["queenbeetLump"].id)
+						{
+							found_plant = true;
+							
+							break;
+						}
+					}
+					
+					if (found_plant)
+					{
+						break;
+					}
+				}	
+				
+				if (!found_plant)
+				{
+					this.do_add_elderwort = false;
+					
+					return;
+				}
+			}
+			
+			
+			
+			if (!Game.ObjectsById[2].minigame.plants["everdaisy"].unlocked)
+			{
+				let found_plant = false;
+				
+				for (let i = 0; i < 6; i++)
+				{
+					for (let j = 0; j < 6; j++)
+					{
+						let id = Game.ObjectsById[2].minigame.plot[i][j][0] - 1;
+						
+						if (id === this.mutation_setups["everdaisy"].id)
+						{
+							found_plant = true;
+							
+							break;
+						}
+					}
+					
+					if (found_plant)
+					{
+						break;
+					}
+				}	
+				
+				if (!found_plant)
+				{
+					this.do_add_elderwort = false;
+					
+					return;
 				}
 			}
 			
@@ -759,6 +877,8 @@
 			
 			if (this.do_add_elderwort)
 			{
+				this.change_soil(1);
+				
 				for (let i = 0; i < 6; i++)
 				{
 					for (let j = 0; j < 6; j++)
@@ -843,7 +963,7 @@
 				
 				if (this.seed_to_unlock !== old_unlock)
 				{
-					Game.Notify('Auto Sacrifice', `Targeting ${Game.ObjectsById[2].minigame.plants[this.seed_order[i]].name}`, [15, 6], 0);
+					Game.Notify('Auto Sacrifice', `Targeting ${Game.ObjectsById[2].minigame.plants[this.seed_order[i]].name}`, [15, 6], Infinity);
 					
 					this.ticks_until_fast_plants = -1;
 					
@@ -897,7 +1017,7 @@
 					this.last_woodchips_ticks = this.woodchips_ticks;
 				}
 				
-				Game.Notify('Auto Sacrifice', `Targeting Bakeberry`, [15, 6], 0);
+				Game.Notify('Auto Sacrifice', `Targeting Bakeberry`, [15, 6], Infinity);
 			}
 		},
 		
@@ -969,6 +1089,32 @@
 									}
 								}
 								
+								//This is a little annoying -- it's hard to not get duplicates, so we need an intermediate step.
+								let mutation_tiles_validity = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+								
+								for (let l = 0; l < tiles.length; l++)
+								{
+									mutation_tiles_validity[(tiles[l][0] - i) / 2 + 1][(tiles[l][0] - j) / 2 + 1] = 1;
+								}
+								
+								let mutation_tiles = [];
+								
+								for (let l = 0; l < 3; l++)
+								{
+									for (let m = 0; m < 3; m++)
+									{
+										let row = i + l - 1;
+										let col = j + m - 1;
+										
+										if (mutation_tiles_validity[l][m] && row >= 0 && row < 5 && col > 0 && col < 5)
+										{
+											mutation_tiles.push([row, col]);
+										}
+									}
+								}
+								
+								
+								
 								let key_to_plant = this.mutation_setups[plant.key].try_without_replanting_partner[k];	
 								
 								let ticks_to_wait = 0;
@@ -982,13 +1128,16 @@
 									ticks_to_wait = Math.max(Math.floor(slow_ticks - fast_ticks), 0);
 								}
 								
+								
+								
 								this.secondary_targets[key] =
 								{
 									source_tile: [i, j],
 									source_key: plant.key,
 									tiles: tiles,
 									ticks_to_wait: ticks_to_wait,
-									key_to_plant: key_to_plant
+									key_to_plant: key_to_plant,
+									mutation_tiles: mutation_tiles
 								};
 							}
 						}
@@ -1504,7 +1653,12 @@
 			}
 			
 			//Shriekbulbs mutate from Duketaters at any age.
-			if (this.seed_to_unlock === "shriekbulb" && Game.ObjectsById[2].minigame.soil === 1)
+			if (this.seed_to_unlock === "shriekbulb" && Game.ObjectsById[2].minigame.soil === 4)
+			{
+				return;
+			}
+			
+			if (this.need_woodchips_for_secondary_target && Game.ObjectsById[2].minigame.soil === 4)
 			{
 				return;
 			}
