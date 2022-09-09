@@ -1285,7 +1285,7 @@
 				}
 			}
 			
-			if (intact < tiles.length * .8)
+			if ((this.seed_to_unlock !== "queenbeetLump" && intact <= tiles.length / 2) || (this.seed_to_unlock === "queenbeetLump" && intact < tiles.length - 2))
 			{
 				//Easy -- just plant a bunch.
 				let arg = this.seed_to_unlock === "queenbeetLump" ? 1 : 0;
@@ -1478,7 +1478,7 @@
 				}
 			}
 			
-			if (intact < slow_tiles.length * .8)
+			if (intact <= slow_tiles.length / 2)
 			{
 				//We start with the slow ones.
 				let arg = this.seed_to_unlock === "queenbeetLump" ? 1 : 0;
@@ -1801,6 +1801,8 @@
 					return;
 				}
 			}
+			
+			
 			
 			Game.ObjectsById[2].minigame.harvest(j, i, true);
 		}
