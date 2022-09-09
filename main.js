@@ -605,11 +605,11 @@
 		post_tick_logic: function()
 		{
 			//Debug for testing
-			
-			Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .001;
-			Game.ObjectsById[2].minigame.soils["woodchips"].tick = .001;
+			/*
+			Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .00001;
+			Game.ObjectsById[2].minigame.soils["woodchips"].tick = .00001;
 			Game.ObjectsById[2].minigame.nextSoil = 0;
-			
+			*/
 			
 			
 			
