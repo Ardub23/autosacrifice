@@ -278,9 +278,6 @@
 			"duketater",
 			"shriekbulb",
 			
-			"whiteChocoroot",
-			"tidygrass",
-			
 			"gildmillet",
 			"clover",
 			"greenRot",
@@ -291,6 +288,9 @@
 			
 			"elderwort",
 			"wardlichen",
+			
+			"whiteChocoroot",
+			"tidygrass",
 			
 			"everdaisy",
 			"ichorpuff",
@@ -366,9 +366,9 @@
 				type: 0,
 				parents: ["clover"],
 				
-				tiles: [[0, 0], [0, 1], [0, 3], [0, 5], [1, 1], [1, 3], [1, 5], [2, 0], [2, 3], [2, 5], [3, 0], [3, 2], [3, 5], [4, 0], [4, 2], [4, 4], [5, 0], [5, 2], [5, 4], [5, 5]],
+				tiles: [[0, 0], [0, 2], [0, 5], [1, 1], [1, 2], [1, 3], [1, 4], [1, 5], [2, 0], [2, 1], [3, 4], [3, 5], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4], [5, 0], [5, 3], [5, 5]],
 			
-				empty_tiles: [[0, 2], [0, 4], [1, 0], [1, 2], [1, 4], [2, 1], [2, 2], [2, 4], [3, 1], [3, 3], [3, 4], [4, 1], [4, 3], [4, 5], [5, 1], [5, 3]]
+				empty_tiles: [[0, 1], [0, 3], [0, 4], [1, 0], [2, 2], [2, 3], [2, 4], [2, 5], [3, 0], [3, 1], [3, 2], [3, 3], [4, 5], [5, 1], [5, 2], [5, 4]]
 			},
 			
 			queenbeetLump:
@@ -377,9 +377,9 @@
 				type: 0,
 				parents: ["queenbeet"],
 				
-				tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 0], [1, 2], [1, 3], [1, 5], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [4, 0], [4, 2], [4, 3], [4, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]],
+				tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 0], [1, 2], [1, 4], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [3, 0], [3, 2], [3, 4], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]],
 			
-				empty_tiles: [[1, 1], [1, 4], [4, 1], [4, 4]]
+				empty_tiles: [[1, 1], [1, 3], [3, 1], [3, 3]]
 			},
 			
 			shriekbulb:
@@ -522,7 +522,7 @@
 			{
 				id: 15,
 				type: 1,
-				parents: ["shimmerlily", "whiskerbloom"]
+				parents: ["whiskerbloom", "shimmerlily"]
 			},
 			
 			drowsyfern:
@@ -1697,7 +1697,7 @@
 			{
 				for (let key in Game.buffs)
 				{
-					if (typeof Game.buffs[key].multCpS !== "undefined" && Game.buffs[key].multCpS > 1)
+					if (typeof Game.buffs[key].multCpS !== "undefined" && Game.buffs[key].multCpS > 1 && Game.buffs[key].name.toLowerCase().slice(0, 4) !== "loan")
 					{
 						Game.Notify('Auto Sacrifice', `Skipping planting due to active buff`, [6, 29], 5);
 						
