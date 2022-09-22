@@ -23,38 +23,36 @@ Seed order: this is the result of a fair amount of work -- if you have ideas for
 9. Chocoroot
 10. Queenbeet
 11. Juicy queenbeet
-12. Duketater
-13. Shriekbulb
-
-=== Tidygrass ===
-14. White chocoroot
-15. Tidygrass
-
-=== Cronerice Stuff ===
-16. Gildmillet
-17. Ordinary clover
-18. Green rot
-19. Shimmerlily
 
 === Drowsyfern and Elderwort ===
-20. Keenmoss
-21. Drowsyfern
-22. Elderwort
-23. Wardlichen
-24. Everdaisy
-25. Ichorpuff
+12. Gildmillet
+13. Ordinary clover
+14. Green rot
+15. Shimmerlily
+16. Elderwort
+17. Keenmoss
+18. Drowsyfern
+19. Wardlichen
+
+=== Everdaisy and Ichorpuff ===
+20. White chocoroot
+21. Tidygrass
+22. Everdaisy
+23. Ichorpuff
 
 === Crumbspore Stuff ===
-26. Doughshroom
-27. Wrinklegill
-28. Glovemorel
-29. Cheapcap
-30. Fool's Bolete
+24. Doughshroom
+25. Wrinklegill
+26. Glovemorel
+27. Cheapcap
+28. Fool's Bolete
 
 === The Rest ===
-31. Whiskerbloom
-32. Chimerose
-33. Nursetulip
+29. Whiskerbloom
+30. Chimerose
+31. Nursetulip
+32. Duketater
+33. Shriekbulb
 34. Golden clover
 ```
 
