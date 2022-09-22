@@ -5,6 +5,7 @@
 		auto_sac_enabled: false,
 		do_convert: false,
 		avoid_cps_buffs: false,
+		allow_frenzies: false,
 		do_soil_rotation: false,
 		
 		hook_added: false,
@@ -12,6 +13,7 @@
 		auto_sac_button: null,
 		do_convert_button: null,
 		avoid_cps_buffs_button: null,
+		allow_frenzies_button: null,
 		do_soil_rotation_button: null,
 		
 		init: function()
@@ -41,6 +43,10 @@
 						<label>(skip planting seeds if a buff is currently active; ignores loans)</label>
 						<br>
 						
+						<a class="smallFancyButton prefButton option ${MOD.allow_frenzies ? "on" : "off"}" id="allow-frenzies-button" onclick="Game.toggle_allow_frenzies()">Tolerate frenzies ${MOD.allow_frenzies ? "ON" : "OFF"}</a>
+						<label>(still plant seeds during regular 7x frenzies; has no effect if the previous option is off)</label>
+						<br>
+						
 						<a class="smallFancyButton prefButton option ${MOD.do_soil_rotation ? "on" : "off"}" id="do-soil-rotation-button" onclick="Game.toggle_do_soil_rotation()">Auto rotate soil ${MOD.do_soil_rotation ? "ON" : "OFF"}</a>
 						<label>(automatically switch between fertilizer and wood chips)</label>
 						<br>
@@ -51,10 +57,50 @@
 						MOD.auto_sac_button = l("auto-sac-button");
 						MOD.do_convert_button = l("do-convert-button");
 						MOD.avoid_cps_buffs_button = l("avoid-cps-buffs-button");
+						MOD.allow_frenzies_button = l("allow-frenzies-button");
 						MOD.do_soil_rotation_button = l("do-soil-rotation-button");
 					}, 50);
 				}
 			};
+            
+            
+            
+            Game.updateBuffs=function()//executed every logic frame
+            {
+                for (var i in Game.buffs)
+                {
+                    var buff=Game.buffs[i];
+                    
+                    if (buff.time>=0)
+                    {
+                        if (!l('buffPieTimer'+buff.id)) l('buff'+buff.id).innerHTML=l('buff'+buff.id).innerHTML+'<div class="pieTimer" id="buffPieTimer'+buff.id+'"></div>';
+                        var T=1-(buff.time/buff.maxTime);
+                        T=(T*144)%144;
+                        l('buffPieTimer'+buff.id).style.backgroundPosition=(-Math.floor(T%18))*48+'px '+(-Math.floor(T/18))*48+'px';
+                    }
+                    buff.time--;
+                    if (buff.time<=0)
+                    {
+                        if (Game.onCrate==l('buff'+buff.id)) Game.tooltip.hide();
+                        if (buff.onDie) buff.onDie();
+                        Game.buffsL.removeChild(l('buff'+buff.id));
+                        if (Game.buffs[buff.name])
+                        {
+                            Game.buffs[buff.name]=0;
+                            delete Game.buffs[buff.name];
+                        }
+                        Game.recalculateGains=1;
+                        Game.storeToRefresh=1;
+                        
+                        if (MOD.auto_sac_enabled)
+                        {
+                            MOD.post_tick_logic();
+                        }
+                    }
+                }
+            }
+            
+            
 			
 			Game.toggle_auto_sac = function()
 			{
@@ -79,6 +125,11 @@
 					if (MOD.avoid_cps_buffs)
 					{
 						Game.toggle_avoid_cps_buffs();
+					}
+					
+					if (MOD.allow_frenzies)
+					{
+						Game.toggle_allow_frenzies();
 					}
 					
 					if (MOD.do_soil_rotation)
@@ -160,6 +211,30 @@
 				catch(ex) {}
 			};
 			
+			Game.toggle_allow_frenzies = function()
+			{
+				MOD.allow_frenzies = !MOD.allow_frenzies;
+				
+				try
+				{
+					if (!MOD.allow_frenzies)
+					{
+						MOD.allow_frenzies_button.textContent = "Tolerate frenzies OFF";
+						MOD.allow_frenzies_button.classList.remove("on");
+						MOD.allow_frenzies_button.classList.add("off");
+					}
+					
+					else
+					{
+						MOD.allow_frenzies_button.textContent = "Tolerate frenzies ON";
+						MOD.allow_frenzies_button.classList.remove("off");
+						MOD.allow_frenzies_button.classList.add("on");
+					}
+				}
+				
+				catch(ex) {}
+			};
+			
 			Game.toggle_do_soil_rotation = function()
 			{
 				MOD.do_soil_rotation = !MOD.do_soil_rotation;
@@ -189,7 +264,7 @@
 		
 		save: function()
 		{
-			return `${this.fertilizer_ticks}|${this.woodchips_ticks}|${this.auto_sac_enabled ? 1 : 0}|${this.do_convert ? 1 : 0}|${this.avoid_cps_buffs ? 1 : 0}|${this.do_soil_rotation ? 1 : 0}`;
+			return `${this.fertilizer_ticks}|${this.woodchips_ticks}|${this.auto_sac_enabled ? 1 : 0}|${this.do_convert ? 1 : 0}|${this.avoid_cps_buffs ? 1 : 0}|${this.do_soil_rotation ? 1 : 0}|${this.allow_frenzies ? 1 : 0}`;
 		},
 		
 		
@@ -229,6 +304,11 @@
 				if (components.length > 5 && !!parseInt(components[5]) !== this.do_soil_rotation)
 				{
 					Game.toggle_do_soil_rotation();
+				}
+				
+				if (components.length > 6 && !!parseInt(components[6]) !== this.allow_frenzies)
+				{
+					Game.toggle_allow_frenzies();
 				}
 			}, 1000);
 		},
@@ -287,9 +367,6 @@
 			"drowsyfern",
 			"wardlichen",
 			
-			"duketater",
-			"shriekbulb",
-			
 			"whiteChocoroot",
 			"tidygrass",
 			
@@ -305,6 +382,9 @@
 			"whiskerbloom",
 			"chimerose",
 			"nursetulip",
+			
+			"duketater",
+			"shriekbulb",
 			
 			"goldenClover"
 		],
@@ -660,10 +740,53 @@
 			this.remove_unlocked_plants(false, arg);
 			
 			this.remove_non_unlocked_duplicates();
-			
+            
+            
+            
 			//Sometimes we may be in a state where we don't have the ability to grow anything cause we're waiting on a ton of stuff to grow.
 			if (this.seed_to_unlock === "")
 			{
+                //If there's only one seed to unlock and it's present, change to fertilizer and return.
+                let num_not_unlocked = 0;
+                
+                for (let i = 0; i < this.seed_order.length; i++)
+                {
+                    if (!Game.ObjectsById[2].minigame.plants[this.seed_order[i]].unlocked)
+                    {
+                        num_not_unlocked++;
+                    }
+                }
+                
+                if (num_not_unlocked === 1)
+                {
+                    let id = this.mutation_setups[this.seed_order[i]].id;
+				
+                    let currently_growing = false;
+                    
+                    for (let i = 0; i < 6; i++)
+                    {
+                        for (let j = 0; j < 6; j++)
+                        {
+                            if (Game.ObjectsById[2].minigame.plot[i][j][0] - 1 === id)
+                            {
+                                currently_growing = true;
+                                
+                                break;
+                            }
+                        }
+                        
+                        if (currently_growing)
+                        {
+                            break;
+                        }
+                    }
+                    
+                    if (currently_growing)
+                    {
+                        this.change_soil(1);
+                    }
+                }
+                
 				return;
 			}
 			
@@ -733,6 +856,28 @@
 					this.change_soil(1);
 				}
 			}
+            
+            
+            
+            //Update the garden text.
+            let elements = document.querySelectorAll("#AUTOSAC-new-line-break, #AUTOSAC-garden-text");
+            
+            let text = this.seed_to_unlock === "" ? "Nothing" : Game.ObjectsById[2].minigame.plants[this.seed_to_unlock].name;
+            
+            if (elements.length < 2)
+            {
+                try
+                {
+                    document.querySelector("#gardenSeeds").insertAdjacentHTML("afterend", `<div id="AUTOSAC-new-line-break" class="line"></div><div id="AUTOSAC-garden-text" class="title gardenPanelLabel">Targeting ${text}</div>`);
+                }
+                
+                catch(ex) {}
+            }
+            
+            else
+            {
+                elements[1].textContent = `Targeting ${text}`;
+            }
 		},
 		
 		
@@ -1693,6 +1838,11 @@
 			{
 				return;
 			}
+            
+            if ((id === 1 && Game.ObjectsById[2].amount < 50) || (id === 4 && Game.ObjectsById[2].amount < 300))
+            {
+                return;
+            }
 			
 			//Shriekbulbs mutate from Duketaters at any age.
 			if (this.seed_to_unlock === "shriekbulb" && Game.ObjectsById[2].minigame.soil === 4)
@@ -1738,7 +1888,7 @@
 			{
 				for (let key in Game.buffs)
 				{
-					if (typeof Game.buffs[key].multCpS !== "undefined" && Game.buffs[key].multCpS > 1 && Game.buffs[key].name.toLowerCase().slice(0, 4) !== "loan")
+					if (typeof Game.buffs[key].multCpS !== "undefined" && Game.buffs[key].multCpS > 1 && Game.buffs[key].name.toLowerCase().slice(0, 4) !== "loan" && (!this.allow_frenzies || Game.buffs[key].name !== "Frenzy"))
 					{
 						Game.Notify('Auto Sacrifice', `Skipping planting due to active buff`, [6, 29], 5);
 						
@@ -1746,10 +1896,45 @@
 					}
 				}
 			}
-			
+            
+            
+            
 			let key = Game.ObjectsById[2].minigame.plantsById[id].key;
+            
+            //Don't plant contaminating plants near susceptible ones.
+            let plant = Game.ObjectsById[2].minigame.plants[key];
+            
+            if (typeof plant.contam !== "undefined" && plant.contam !== 0)
+            {
+                let tiles = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
+                
+                for (let i = 0; i < 4; i++)
+				{
+                    let row = tiles[i][0];
+                    let col = tiles[i][1];
+                    
+                    if (row < 0 || row > 5 || col < 0 || col > 5)
+                    {
+                        continue;
+                    }
+                    
+                    let adj_id = Game.ObjectsById[2].minigame.plot[col][row][0] - 1;
+                    
+                    if (adj_id === -1)
+                    {
+                        continue;
+                    }
+                    
+                    let adj_plant = Game.ObjectsById[2].minigame.plantsById[adj_id];
+                    
+                    if (!(typeof adj_plant.noContam !== "undefined" && adj_plant.noContam))
+					{
+                        return;
+                    }
+				}
+            }
 			
-			if (Game.ObjectsById[2].minigame.plants[key].unlocked)
+			if (plant.unlocked)
 			{
 				Game.ObjectsById[2].minigame.useTool(id, x, y);
 			}
