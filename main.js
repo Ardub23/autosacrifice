@@ -9,6 +9,7 @@
 		do_soil_rotation: false,
 		
 		hook_added: false,
+		last_time_called_from_buff_end: 0,
 		
 		auto_sac_button: null,
 		do_convert_button: null,
@@ -32,7 +33,7 @@
 				{
 					document.querySelector("#screenreaderButton").nextElementSibling.nextElementSibling.insertAdjacentHTML("afterend", `
 						<a class="smallFancyButton prefButton option ${MOD.auto_sac_enabled ? "on" : "off"}" id="auto-sac-button" onclick="Game.toggle_auto_sac()">AutoSacrifice ${MOD.auto_sac_enabled ? "ON" : "OFF"}</a>
-						<label>(make the garden fully automatic, from planting to harvesting to sacrificing)</label>
+						<label>(the global on/off switch for the AutoSacrifice mod. Makes the garden fully automatic, from planting to harvesting to sacrificing. None of the below four options have any effect if this is off.)</label>
 						<br>
 						
 						<a class="smallFancyButton prefButton option ${MOD.do_convert ? "on" : "off"}" id="do-convert-button" onclick="Game.toggle_do_convert()">Auto convert ${MOD.do_convert ? "ON" : "OFF"}</a>
@@ -92,8 +93,10 @@
                         Game.recalculateGains=1;
                         Game.storeToRefresh=1;
                         
-                        if (MOD.auto_sac_enabled)
+                        if (MOD.auto_sac_enabled && Date.now() - MOD.last_time_called_from_buff_end > 10000)
                         {
+                        		MOD.last_time_called_from_buff_end = Date.now();
+                        		
                             MOD.post_tick_logic();
                         }
                     }
@@ -1896,6 +1899,11 @@
 					}
 				}
 			}
+			
+			if (Game.ObjectsById[2].minigame.plot[y][x][0] !== 0)
+			{
+				return;
+			}
             
             
             
@@ -1927,7 +1935,14 @@
                     
                     let adj_plant = Game.ObjectsById[2].minigame.plantsById[adj_id];
                     
-                    if (!(typeof adj_plant.noContam !== "undefined" && adj_plant.noContam))
+                    //It's okay to plant dangerous plants next to other dangerous ones.
+                    if (typeof adj_plant.contam !== "undefined" && adj_plant.contam !== 0)
+                    {
+                    		continue;
+                    }
+                    
+                    //But it's not okay to plant to susceptible ones.
+                    if (typeof adj_plant.noContam === "undefined" || !adj_plant.noContam)
 					{
                         return;
                     }
