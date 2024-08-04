@@ -689,12 +689,10 @@
 		{
 			//Debug for testing
 			/*
-			Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .00001;
-			Game.ObjectsById[2].minigame.soils["woodchips"].tick = .00001;
+			Game.ObjectsById[2].minigame.soils["fertilizer"].tick = .0005;
+			Game.ObjectsById[2].minigame.soils["woodchips"].tick = .0005;
 			Game.ObjectsById[2].minigame.nextSoil = 0;
 			*/
-			
-			
 			
 			if (Game.ObjectsById[2].minigame.soil === 1)
 			{
@@ -828,35 +826,38 @@
 			
 			else if (this.seed_to_unlock === "queenbeetLump")
 			{
-				this.select_next_target(true);
-				
-				if (this.seed_to_unlock === "")
+				if (!Game.ObjectsById[2].minigame.plants["elderwort"].unlocked)
 				{
-					if (this.fertilizer_requests > 0)
+					this.select_next_target(true);
+					
+					if (this.seed_to_unlock === "")
+					{
+						if (this.fertilizer_requests > 0)
+						{
+							this.change_soil(1);
+						}
+						
+						return;
+					}
+					
+					this.remove_unlocked_plants(false, 2);
+					
+					let setup = this.mutation_setups[this.seed_to_unlock];
+					
+					if (setup.type === 0)
+					{
+						this.unlock_type_0_logic(...(setup.parents), [[0, 5], [2, 5], [4, 5], [5, 0], [5, 2], [5, 4]], [[1, 5], [3, 5], [5, 1], [5, 3], [5, 5]]);
+					}
+					
+					else if (setup.type === 1)
+					{
+						this.unlock_type_1_logic(...(setup.parents), [[0, 5], [4, 5], [5, 2]], [[2, 5], [5, 0], [5, 4]], [[1, 5], [3, 5], [5, 1], [5, 3], [5, 5]]);
+					}
+					
+					if (this.fertilizer_requests === 2)
 					{
 						this.change_soil(1);
 					}
-					
-					return;
-				}
-				
-				this.remove_unlocked_plants(false, 2);
-				
-				let setup = this.mutation_setups[this.seed_to_unlock];
-				
-				if (setup.type === 0)
-				{
-					this.unlock_type_0_logic(...(setup.parents), [[0, 5], [2, 5], [4, 5], [5, 0], [5, 2], [5, 4]], [[1, 5], [3, 5], [5, 1], [5, 3], [5, 5]]);
-				}
-				
-				else if (setup.type === 1)
-				{
-					this.unlock_type_1_logic(...(setup.parents), [[0, 5], [4, 5], [5, 2]], [[2, 5], [5, 0], [5, 4]], [[1, 5], [3, 5], [5, 1], [5, 3], [5, 5]]);
-				}
-				
-				if (this.fertilizer_requests === 2)
-				{
-					this.change_soil(1);
 				}
 			}
             
@@ -1118,6 +1119,19 @@
 				Game.ObjectsById[2].minigame.convert();
 				
 				this.seed_to_unlock = "meddleweed";
+				
+				
+				
+				this.mutation_setups["queenbeetLump"] =
+				{
+					id: 21,
+					type: 0,
+					parents: ["queenbeet"],
+					
+					tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [1, 0], [1, 2], [1, 4], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [3, 0], [3, 2], [3, 4], [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]],
+				
+					empty_tiles: [[1, 1], [1, 3], [3, 1], [3, 3]]
+				};
 				
 				
 				
@@ -1398,8 +1412,10 @@
 		unlock_type_0_logic: function(parent, tiles_override = 0, empty_tiles_override = 0)
 		{
 			let id = this.mutation_setups[parent].id;
+            let plant = Game.ObjectsById[2].minigame.plantsById[id];
 			
 			let intact = 0;
+            let possibly_intact = 0;
 			
 			let tiles = [];
 			let empty_tiles = [];
@@ -1431,9 +1447,25 @@
 				{
 					intact++;
 				}
+                
+                else if (Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][0] === 0)
+				{
+					if (typeof plant.contam !== "undefined" && plant.contam !== 0)
+                    {
+                        if (this.is_valid_for_dangerous_plant(tiles[i][1], tiles[i][0]))
+                        {
+                            possibly_intact++;
+                        }
+                    }
+                    
+                    else
+                    {
+                        possibly_intact++;
+                    }
+				}
 			}
 			
-			if ((this.seed_to_unlock !== "queenbeetLump" && intact <= tiles.length / 2) || (this.seed_to_unlock === "queenbeetLump" && intact < tiles.length - 2))
+			if ((this.seed_to_unlock !== "queenbeetLump" && intact < possibly_intact) || (this.seed_to_unlock === "queenbeetLump" && possibly_intact >= 2))
 			{
 				//Easy -- just plant a bunch.
 				let arg = this.seed_to_unlock === "queenbeetLump" ? 1 : 0;
@@ -1443,12 +1475,17 @@
 					arg = 2;
 				}
 				
+				if (arg === 1 && Game.ObjectsById[2].minigame.plants["elderwort"].unlocked)
+				{
+					arg = 0;
+				}
+				
 				this.remove_unlocked_plants(true, arg);
 				
 				
 				
 				//The JQB setup is so time-consuming that we wait to plant them until the area is clear.
-				if (Game.ObjectsById[2].minigame.plants[parent].key === "queenbeet")
+				if (this.seed_to_unlock === "queenbeetLump")
 				{
 					intact = 0;
 					
@@ -1463,6 +1500,33 @@
 					if (intact !== 0)
 					{
 						return;
+					}
+					
+					//If we've got elderwort, it's time to switch to a 6x6.
+					if (Game.ObjectsById[2].minigame.plants["elderwort"].unlocked)
+					{
+						if (this.mutation_setups.queenbeetLump.empty_tiles[3][0] === 3)
+						{
+							//We also scrap *everything* so we don't get stuck targeting old plants.
+							for (let i = 0; i < 6; i++)
+							{
+								for (let j = 0; j < 6; j++)
+								{
+									Game.ObjectsById[2].minigame.harvest(j, i, true);
+								}
+							}
+						}
+						
+						this.mutation_setups.queenbeetLump = 
+						{
+							id: 21,
+							type: 0,
+							parents: ["queenbeet"],
+							
+							tiles: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4], [0, 5], [1, 0], [1, 2], [1, 3], [1, 5], [2, 0], [2, 1], [2, 2], [2, 3], [2, 4], [2, 5], [3, 0], [3, 1], [3, 2], [3, 3], [3, 4], [3, 5], [4, 0], [4, 2], [4, 3], [4, 5], [5, 0], [5, 1], [5, 2], [5, 3], [5, 4], [5, 5]],
+						
+							empty_tiles: [[1, 1], [1, 4], [4, 1], [4, 4]]
+						};
 					}
 				}
 				
@@ -1495,8 +1559,6 @@
 			
 			let mature = 0;
 			
-			let plant = Game.ObjectsById[2].minigame.plantsById[id];
-			
 			for (let i = 0; i < tiles.length; i++)
 			{
 				if (Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][0] !== 0 && Game.ObjectsById[2].minigame.plot[tiles[i][0]][tiles[i][1]][1] >= plant.mature)
@@ -1512,7 +1574,7 @@
 			
 			else
 			{
-				if (empty_tiles_override === 0 && this.seed_to_unlock !== "queenbeetLump")
+				if (empty_tiles_override === 0 && (this.seed_to_unlock !== "queenbeetLump" || this.seed_to_unlock === "queenbeetLump" && Game.ObjectsById[2].minigame.plants["elderwort"].unlocked))
 				{
 					this.change_soil(1);
 				}
@@ -1617,6 +1679,7 @@
 			
 			//If more than half the slow plants are missing, we should replant everything.
 			let intact = 0;
+            let possibly_intact = 0;
 			
 			for (let i = 0; i < slow_tiles.length; i++)
 			{
@@ -1624,9 +1687,26 @@
 				{
 					intact++;
 				}
+                
+                else if (Game.ObjectsById[2].minigame.plot[slow_tiles[i][0]][slow_tiles[i][1]][0] === 0)
+                {
+                    //Here we have to double check that this is actually a spot that could be planted in.
+                    if (typeof slow_plant.contam !== "undefined" && slow_plant.contam !== 0)
+                    {
+                        if (this.is_valid_for_dangerous_plant(slow_tiles[i][1], slow_tiles[i][0]))
+                        {
+                            possibly_intact++;
+                        }
+                    }
+                    
+                    else
+                    {
+                        possibly_intact++;
+                    }
+                }
 			}
 			
-			if (intact <= slow_tiles.length / 2)
+			if (intact < possibly_intact)
 			{
 				//We start with the slow ones.
 				let arg = this.seed_to_unlock === "queenbeetLump" ? 1 : 0;
@@ -1734,7 +1814,7 @@
 			
 			else
 			{
-				if (empty_tiles_override === 0 && this.seed_to_unlock !== "queenbeetLump")
+				if (empty_tiles_override === 0 && (this.seed_to_unlock !== "queenbeetLump" || this.seed_to_unlock === "queenbeetLump" && Game.ObjectsById[2].minigame.plants["elderwort"].unlocked))
 				{
 					this.change_soil(1);
 				}
@@ -1882,6 +1962,47 @@
 				catch(ex) {}
 			}
 		},
+        
+        
+        
+        is_valid_for_dangerous_plant: function(x, y)
+        {
+            let tiles = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
+            
+            for (let i = 0; i < 4; i++)
+            {
+                let row = tiles[i][0];
+                let col = tiles[i][1];
+                
+                if (row < 0 || row > 5 || col < 0 || col > 5)
+                {
+                    continue;
+                }
+                
+                let adj_id = Game.ObjectsById[2].minigame.plot[col][row][0] - 1;
+                
+                if (adj_id === -1)
+                {
+                    continue;
+                }
+                
+                let adj_plant = Game.ObjectsById[2].minigame.plantsById[adj_id];
+                
+                //It's okay to plant dangerous plants next to other dangerous ones.
+                if (typeof adj_plant.contam !== "undefined" && adj_plant.contam !== 0)
+                {
+                    continue;
+                }
+                
+                //But it's not okay to plant to susceptible ones.
+                if (typeof adj_plant.noContam === "undefined" || !adj_plant.noContam)
+                {
+                    return false;
+                }
+            }
+            
+            return true;
+        },
 		
 		
 		
@@ -1914,39 +2035,10 @@
             
             if (typeof plant.contam !== "undefined" && plant.contam !== 0)
             {
-                let tiles = [[x - 1, y], [x + 1, y], [x, y - 1], [x, y + 1]];
-                
-                for (let i = 0; i < 4; i++)
-				{
-                    let row = tiles[i][0];
-                    let col = tiles[i][1];
-                    
-                    if (row < 0 || row > 5 || col < 0 || col > 5)
-                    {
-                        continue;
-                    }
-                    
-                    let adj_id = Game.ObjectsById[2].minigame.plot[col][row][0] - 1;
-                    
-                    if (adj_id === -1)
-                    {
-                        continue;
-                    }
-                    
-                    let adj_plant = Game.ObjectsById[2].minigame.plantsById[adj_id];
-                    
-                    //It's okay to plant dangerous plants next to other dangerous ones.
-                    if (typeof adj_plant.contam !== "undefined" && adj_plant.contam !== 0)
-                    {
-                    		continue;
-                    }
-                    
-                    //But it's not okay to plant to susceptible ones.
-                    if (typeof adj_plant.noContam === "undefined" || !adj_plant.noContam)
-					{
-                        return;
-                    }
-				}
+                if (!this.is_valid_for_dangerous_plant(x, y))
+                {
+                    return;
+                }
             }
 			
 			if (plant.unlocked)
@@ -1961,7 +2053,7 @@
 		{
 			let plant_id = Game.ObjectsById[2].minigame.plot[i][j][0] - 1;
 			
-			if (plant_id === this.mutation_setups["elderwort"].id)
+			if (plant_id === this.mutation_setups["elderwort"].id && Game.ObjectsById[2].minigame.plants["elderwort"].unlocked)
 			{
 				//Elderwort next to a JQB is never removed.
 				let found_target = false;
@@ -2001,8 +2093,6 @@
 					return;
 				}
 			}
-			
-			
 			
 			Game.ObjectsById[2].minigame.harvest(j, i, true);
 		}
